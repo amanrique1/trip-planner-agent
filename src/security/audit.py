@@ -90,17 +90,18 @@ def log_security_event(
     *,
     request_id: str,
     username: str,
-    event: str,
+    event_type: str,
     detail: str,
 ) -> None:
     _audit_log.warning(
         "security_event",
         request_id=request_id,
         username=username,
-        event=event,
+        event_type=event_type,
         detail=detail,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
+
 
 
 def log_error(
@@ -115,6 +116,6 @@ def log_error(
         request_id=request_id,
         username=username,
         error=error,
-        timestamp=datetime.now(datetime.UTC).isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         exc_info=exc_info,
     )

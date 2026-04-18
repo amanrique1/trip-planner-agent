@@ -6,7 +6,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.status import Status
 from rich.markdown import Markdown
-from agents.trip_agent import TripPlannerAgent
+from agents.trip_planner import TripPlannerAgent
 
 console = Console()
 

@@ -1,5 +1,38 @@
 import requests
-from google.adk.tools import FunctionTool
+from google.adk.tools import FunctionTool, ToolContext
+
+
+def save_trip_params(
+    origin: str,
+    destination: str,
+    start_date: str,
+    end_date: str,
+    tool_context: ToolContext,
+) -> dict:
+    """
+    Save the extracted trip parameters to session state.
+
+    Args:
+        origin: Departure city, e.g. 'New York'
+        destination: Arrival city, e.g. 'Paris'
+        start_date: Trip start date, e.g. '2025-06-10'
+        end_date: Trip end date, e.g. '2025-06-17'
+
+    Returns:
+        Confirmation of saved parameters.
+    """
+    params = {
+        "origin": origin,
+        "destination": destination,
+        "start_date": start_date,
+        "end_date": end_date,
+        "dates": f"{start_date} to {end_date}",
+    }
+
+    for key, value in params.items():
+        tool_context.state[key] = value
+
+    return {"status": "saved", **params}
 
 
 def get_coordinates(city: str) -> dict:
@@ -21,11 +54,16 @@ def get_coordinates(city: str) -> dict:
 
     if "results" in data and data["results"]:
         r = data["results"][0]
-        return {"lat": r["latitude"], "long": r["longitude"], "name": r["name"]}
+        return {
+            "lat": r["latitude"],
+            "long": r["longitude"],
+            "name": r["name"],
+        }
+
     return {"error": f"Could not find coordinates for '{city}'"}
 
 
-def get_weather(lat: float, long: float) -> dict:
+def get_weather(lat: float, long: float, tool_context: ToolContext) -> dict:
     """
     Fetch a 7-day weather forecast for given coordinates.
 
@@ -47,8 +85,18 @@ def get_weather(lat: float, long: float) -> dict:
     }
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
-    return response.json()
+    data = response.json()
+
+    tool_context.state["weather_raw"] = {
+        "daily_max": data["daily"]["temperature_2m_max"],
+        "daily_min": data["daily"]["temperature_2m_min"],
+        "weather_codes": data["daily"]["weathercode"],
+        "dates": data["daily"]["time"],
+    }
+
+    return data
 
 
+save_trip_params_tool = FunctionTool(save_trip_params)
 coordinates_tool = FunctionTool(get_coordinates)
 weather_tool = FunctionTool(get_weather)

@@ -4,7 +4,7 @@ import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from agents.trip_agent import TripPlannerAgent
+from agents.trip_planner import TripPlannerAgent
 from api.auth import authenticate_basic, create_access_token, get_current_user
 from api.models import ErrorResponse, TokenResponse, TripRequest, TripResponse
 from config import get_settings
@@ -90,7 +90,7 @@ async def plan_trip(
         log_security_event(
             request_id=request_id,
             username=username,
-            event="rate_limit_exceeded",
+            event_type="rate_limit_exceeded",
             detail=f"retry_after={retry_after}s",
         )
         raise HTTPException(
@@ -105,7 +105,7 @@ async def plan_trip(
         log_security_event(
             request_id=request_id,
             username=username,
-            event="input_blocked",
+            event_type="input_blocked",
             detail=input_result.reason,
         )
         raise HTTPException(
@@ -155,7 +155,7 @@ async def plan_trip(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Agent execution failed. Check server logs.",
+            detail="Agent execution failed. Try again later.",
         ) from exc
 
     # Output filter
@@ -164,7 +164,7 @@ async def plan_trip(
         log_security_event(
             request_id=request_id,
             username=username,
-            event="output_sanitized",
+            event_type="output_sanitized",
             detail=output_result.reason,
         )
         final_output = sanitize_output(final_output)
