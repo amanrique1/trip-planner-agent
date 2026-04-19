@@ -1,8 +1,10 @@
+from config import get_model
+
 from google.adk.agents import LlmAgent
 from agents.tools import coordinates_tool, weather_tool
 
 weather_agent = LlmAgent(
-    model="gemini-2.5-flash",
+    model=get_model(),
     name="WeatherAgent",
     description="Fetches current and 7-day weather for the destination.",
     instruction="""

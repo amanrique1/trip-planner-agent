@@ -111,10 +111,11 @@ This starts the **Interactive REPL**. You can talk to the agent in natural langu
 
 ```
 🌍 Trip Planner CLI
-╭──────────────────────────────────────╮
-│  Trip Planner Agent                  │
-│  Your AI assistant for planning...   │
-╰──────────────────────────────────────╯
+╭──────────────────────────────────────────────────────╮
+│  Trip Planner Agent                                  │
+│ Your AI assistant for planning the perfect journey.  │
+╰──────────────────────────────────────────────────────╯
+
 How can I help you plan your trip? (type 'exit' to quit)
 
 You: Plan a trip from San Francisco to Tokyo, July 1-10
@@ -247,7 +248,8 @@ When you send a query through any interface, the same pipeline executes:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GOOGLE_API_KEY` | Yes | Gemini + Google Search API key |
+| `GOOGLE_API_KEY` | No (OPT 1) | Gemini + Google Search API key |
+| `LITELLM_MODEL` | No (OPT 2) | Model to use for the agent, instead of GOOGLE_API_KEY |
 | `SECRET_KEY` | Yes | 32-byte hex string for JWT signing |
 | `ADMIN_PASSWORD_HASH` | Yes | bcrypt hash of the admin password |
 | `ADMIN_USERNAME` | No | Defaults to `admin` |

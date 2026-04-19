@@ -1,8 +1,10 @@
+from config import get_model
+
 from google.adk.agents import LlmAgent
 from agents.tools import save_trip_params_tool
 
 intake_agent = LlmAgent(
-    model="gemini-2.5-flash",
+    model=get_model(),
     name="IntakeAgent",
     description="Extracts trip parameters from the user message and saves them to state.",
     instruction="""

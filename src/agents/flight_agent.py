@@ -1,8 +1,10 @@
+from config import get_model
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 
 flight_agent = LlmAgent(
-    model="gemini-2.5-flash",
+    model=get_model(),
     name="FlightAgent",
     description="Searches for flight options between origin and destination.",
     instruction="""

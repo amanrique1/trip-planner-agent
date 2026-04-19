@@ -14,3 +14,11 @@ wheels/
 
 # Logs
 logs/
+*.jsonl
+*.db
+
+# ADK
+.adk/
+
+# Tests
+.pytest_cache/

@@ -1,8 +1,10 @@
+from config import get_model
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 
 activities_agent = LlmAgent(
-    model="gemini-2.5-flash",
+    model=get_model(),
     name="ActivitiesAgent",
     description="Plans daily activities based on destination and weather.",
     instruction="""

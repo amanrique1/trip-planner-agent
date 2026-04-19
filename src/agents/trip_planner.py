@@ -8,7 +8,7 @@ from agents.weather_agent import weather_agent
 from agents.flight_agent import flight_agent
 from agents.activities_agent import activities_agent
 from agents.hotel_agent import hotel_agent
-
+from config import get_model
 
 class TripPlannerAgent:
     _instance = None
@@ -19,7 +19,7 @@ class TripPlannerAgent:
             cls._instance = super(TripPlannerAgent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, model_name: str = "gemini-2.5-flash"):
+    def __init__(self):
         if hasattr(self, "trip_coordinator"):
             return
 
@@ -30,7 +30,7 @@ class TripPlannerAgent:
         )
 
         self.summary_agent = LlmAgent(
-            model=model_name,
+            model=get_model(),
             name="SummaryAgent",
             description="Compiles the full trip itinerary from all previous outputs.",
             instruction="""

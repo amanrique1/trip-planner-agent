@@ -32,7 +32,7 @@ def save_trip_params(
     for key, value in params.items():
         tool_context.state[key] = value
 
-    return {"status": "saved", **params}
+    return params
 
 
 def get_coordinates(city: str) -> dict:

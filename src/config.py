@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from google.adk.models.lite_llm import LiteLlm
 
 
 class Settings(BaseSettings):
@@ -13,7 +14,11 @@ class Settings(BaseSettings):
 
     # ── Google / Gemini ──────────────────────────────────────────────────────
     google_api_key: str = ""
+    google_model: str = "gemini-2.5-flash"
     google_genai_use_vertexai: bool = False
+
+    # ── LiteLLM ──────────────────────────────────────────────────────────────
+    litellm_model: str = ""
 
     # ── Security ─────────────────────────────────────────────────────────────
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
@@ -46,3 +51,15 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+@lru_cache
+def get_model():
+    settings = get_settings()
+
+    # If a LiteLLM/Ollama model is provided
+    if settings.litellm_model:
+        return LiteLlm(model=settings.litellm_model)
+
+    # Otherwise, return the string for the ADK to handle natively
+    # (The ADK will treat a string as a Gemini model name by default)
+    return settings.google_model

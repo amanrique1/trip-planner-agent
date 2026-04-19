@@ -1,8 +1,10 @@
+from config import get_model
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 
 hotel_agent = LlmAgent(
-    model="gemini-2.5-flash",
+    model=get_model(),
     name="HotelAgent",
     description="Finds hotels near the planned activities in the destination.",
     instruction="""
