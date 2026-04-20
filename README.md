@@ -103,6 +103,12 @@ SummaryAgent      reads all keys
 | `get_weather` | **Writes** `weather_raw` via `tool_context.state` | Structured API data (arrays of temps, codes, dates) needed by ActivitiesAgent for indoor/outdoor logic |
 | `google_search` | No state | Results are synthesised into prose by each agent's `output_key` |
 
+### Cloud vs Local Architecture
+
+The project supports both cutting-edge Cloud LLMs (e.g. Gemini) and Local LLMs (via LiteLLM).
+- **Cloud Mode (`GOOGLE_API_KEY`):** Instructions loaded from `cloud.json` prompt agents to use `tools` (e.g., `google_search`, weather APIs) dynamically to explore options.
+- **Local Mode (`LITELLM_MODEL`):** Instructions loaded from `local.json` prompt agents to digest pre-fetched mock data populated by `before_agent_callback`. This gracefully bypasses the complex tool-calling mechanics that smaller local models may struggle with.
+
 ### Security Stack
 
 | Layer | Implementation |
@@ -157,7 +163,13 @@ uv run scripts/hash_creator.py
 ```
 src/
 ├── agents/
-│   ├── tools.py              # save_trip_params, get_coordinates, get_weather
+│   ├── instructions/
+│   │   ├── cloud.json        # Prompts utilizing Gemini + Search tools
+│   │   └── local.json        # Prompts utilizing prefetched mock data
+│   ├── utils/
+│   │   ├── callbacks.py      # Prefetch callbacks used when in local model mode
+│   │   ├── instruction_loader.py # Dynamically loads prompts by mode
+│   │   └── tools.py          # Real API tools (save_trip_params, get_coordinates, etc.)
 │   ├── intake_agent.py       # Extracts trip params → state
 │   ├── weather_agent.py      # Coordinates + forecast
 │   ├── flight_agent.py       # Google Search for flights

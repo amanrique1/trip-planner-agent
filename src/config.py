@@ -63,3 +63,8 @@ def get_model():
     # Otherwise, return the string for the ADK to handle natively
     # (The ADK will treat a string as a Gemini model name by default)
     return settings.google_model
+
+@lru_cache
+def is_gemini_model() -> bool:
+    """Returns True when using a native Gemini model, False for LiteLLM/Ollama."""
+    return not bool(get_settings().litellm_model)

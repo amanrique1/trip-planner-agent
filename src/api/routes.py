@@ -21,6 +21,7 @@ from security.rate_limiter import rate_limiter
 settings = get_settings()
 router = APIRouter()
 
+
 # Auth
 @router.post(
     "/auth/token",
@@ -60,7 +61,6 @@ async def _resolve_session(user_id: str, session_id: str | None) -> str:
                 detail=f"Session '{session_id}' not found. "
                        f"Omit session_id to start a new conversation.",
             )
-    # No session_id supplied → create one
     return await agent.create_session(user_id)
 
 
@@ -132,16 +132,16 @@ async def plan_trip(
             detail="Failed to initialise session.",
         ) from exc
 
-    # Run agent
+    # Run the full agent pipeline
     try:
-        events = await agent.run(
+        final_output = ""
+
+        # no await — agent.run() is an async generator
+        async for event in agent.run(
             user_id=username,
             session_id=session_id,
             message=body.query,
-        )
-
-        final_output = ""
-        async for event in events:
+        ):
             if hasattr(event, "content") and event.content:
                 final_output = str(event.content)
 

@@ -1,32 +1,25 @@
-from config import get_model
-
+from config import get_model, is_gemini_model
 from google.adk.agents import LlmAgent
-from google.adk.tools import google_search
+from agents.utils.instruction_loader import get_instruction
+
+_AGENT_NAME = "HotelAgent"
+instruction = get_instruction(_AGENT_NAME, is_gemini_model())
+
+extra_params = {}
+
+if is_gemini_model():
+    from agents.tools import search_tool
+    extra_params["tools"] = [search_tool]
+else:
+    from agents.utils.callbacks import prefetch_hotels
+    extra_params["tools"] = []
+    extra_params["before_agent_callback"] = prefetch_hotels
 
 hotel_agent = LlmAgent(
     model=get_model(),
-    name="HotelAgent",
+    name=_AGENT_NAME,
     description="Finds hotels near the planned activities in the destination.",
-    instruction="""
-        You are a hotel search specialist.
-
-        Destination:        {destination}
-        Travel dates:       {dates}
-        Planned activities: {activities_info}
-
-        Identify the neighbourhoods where the planned activities
-        are concentrated.
-        Use google_search to find well-rated hotels in or near
-        those neighbourhoods in {destination}.
-
-        For each hotel include:
-        - Name
-        - Neighbourhood / area
-        - Approximate price per night
-        - Which planned activities it is closest to
-
-        Return ONLY hotel recommendations.
-    """,
-    tools=[google_search],
+    instruction=instruction,
     output_key="hotel_info",
+    **extra_params
 )

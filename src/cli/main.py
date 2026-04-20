@@ -1,4 +1,5 @@
 import os
+import sys
 import asyncio
 import subprocess
 from rich.console import Console
@@ -10,22 +11,24 @@ from agents.trip_planner import TripPlannerAgent
 
 console = Console()
 
+
 async def chat() -> None:
     console.print(Panel.fit(
         "[bold blue]Trip Planner Agent[/bold blue]\n"
         "[italic]Your AI assistant for planning the perfect journey.[/italic]",
-        border_style="bright_blue"
+        border_style="bright_blue",
     ))
 
     user_id = "cli_user"
     agent = TripPlannerAgent()
-
-    # Let the session service create & track the session
     session_id = await agent.create_session(user_id)
 
     while True:
         try:
-            query = Prompt.ask("\n[bold cyan]How can I help you plan your trip?[/bold cyan] (type 'exit' to quit)")
+            query = Prompt.ask(
+                "\n[bold cyan]How can I help you plan your trip?[/bold cyan] "
+                "(type 'exit' to quit)"
+            )
 
             if query.lower() in ("exit", "quit", "q"):
                 console.print("[yellow]Goodbye![/yellow]")
@@ -34,23 +37,33 @@ async def chat() -> None:
             if not query.strip():
                 continue
 
-            with Status("[bold green]Agent is thinking...[/bold green]", console=console):
-                events = await agent.run(
+            with Status(
+                "[bold green]Agent is thinking...[/bold green]",
+                console=console,
+            ):
+                final_itinerary = ""
+
+                # ── no await — run() is an async generator now ──
+                async for event in agent.run(
                     user_id=user_id,
                     session_id=session_id,
-                    message=query
-                )
-
-                final_itinerary = ""
-                async for event in events:
+                    message=query,
+                ):
                     if hasattr(event, "content") and event.content:
                         final_itinerary = str(event.content)
 
             if final_itinerary:
                 console.print("\n")
-                console.print(Panel(Markdown(final_itinerary), title="[bold green]Your Trip Plan[/bold green]", border_style="green"))
+                console.print(Panel(
+                    Markdown(final_itinerary),
+                    title="[bold green]Your Trip Plan[/bold green]",
+                    border_style="green",
+                ))
             else:
-                console.print("[red]No itinerary was generated. Please try a different query.[/red]")
+                console.print(
+                    "[red]No itinerary was generated. "
+                    "Please try a different query.[/red]"
+                )
 
         except KeyboardInterrupt:
             console.print("\n[yellow]Goodbye![/yellow]")
@@ -58,6 +71,7 @@ async def chat() -> None:
         except Exception as e:
             console.print(f"[bold red]Error:[/bold red] {e}")
             raise e
+
 
 def web() -> None:
     """Shortcut entry point for `adk web`."""
@@ -75,12 +89,14 @@ def web() -> None:
     except KeyboardInterrupt:
         pass
 
+
 def app() -> None:
     """Entry point for the CLI."""
     try:
         asyncio.run(chat())
     except KeyboardInterrupt:
         pass
+
 
 if __name__ == "__main__":
     app()

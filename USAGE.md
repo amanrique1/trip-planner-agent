@@ -244,12 +244,21 @@ When you send a query through any interface, the same pipeline executes:
 
 ---
 
+## Cloud vs Local Mode
+
+The pipeline execution seamlessly handles two modes based on your environment variables:
+
+1. **Cloud Mode** (`GOOGLE_API_KEY` provided): Agents are prompted to use external tool implementations (e.g. `google_search`, weather API). They fetch real-time data dynamically.
+2. **Local Mode** (`LITELLM_MODEL` provided, no Google API Key): Small local models often struggle with complex tool selection loops. Thus, the system loads local instructions (`src/agents/instructions/local.json`) which restricts the agents from calling tools directly. Instead, pre-fetched data is populated via `before_agent_callback` and injected into the prompt. The LLM only acts to summarize and format.
+
+---
+
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GOOGLE_API_KEY` | No (OPT 1) | Gemini + Google Search API key |
-| `LITELLM_MODEL` | No (OPT 2) | Model to use for the agent, instead of GOOGLE_API_KEY |
+| `LITELLM_MODEL` | No (OPT 2) | Local model to use for the agent instead of `GOOGLE_API_KEY` (e.g., `ollama_chat/llama3`). |
 | `SECRET_KEY` | Yes | 32-byte hex string for JWT signing |
 | `ADMIN_PASSWORD_HASH` | Yes | bcrypt hash of the admin password |
 | `ADMIN_USERNAME` | No | Defaults to `admin` |

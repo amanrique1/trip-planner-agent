@@ -1,30 +1,25 @@
-from config import get_model
-
+from config import get_model, is_gemini_model
 from google.adk.agents import LlmAgent
-from agents.tools import save_trip_params_tool
+from agents.utils.instruction_loader import get_instruction
+
+_AGENT_NAME = "IntakeAgent"
+instruction = get_instruction(_AGENT_NAME, is_gemini_model())
+
+extra_params = {}
+
+if is_gemini_model():
+    from agents.tools import save_trip_params_tool
+    extra_params["tools"] = [save_trip_params_tool]
+else:
+    from agents.utils.callbacks import store_trip_params
+    extra_params["tools"] = []
+    extra_params["output_key"] = "trip_params_raw"
+    extra_params["after_agent_callback"] = store_trip_params
 
 intake_agent = LlmAgent(
     model=get_model(),
-    name="IntakeAgent",
-    description="Extracts trip parameters from the user message and saves them to state.",
-    instruction="""
-        You are a trip parameter extractor.
-
-        From the user's message, identify:
-        - origin: the departure city
-        - destination: the arrival city
-        - start_date: in YYYY-MM-DD format
-        - end_date: in YYYY-MM-DD format
-
-        If the user gives relative dates like "next week", estimate
-        based on today's date.
-        If any parameter is unclear or missing, pick a reasonable
-        default and note your assumption.
-
-        You MUST call save_trip_params exactly once with all four values.
-        After the tool call succeeds, reply with a short confirmation
-        of the trip details you understood.
-    """,
-    tools=[save_trip_params_tool],
-    output_key="trip_params_summary",
+    name=_AGENT_NAME,
+    description="Extracts trip parameters from the user message.",
+    instruction=instruction,
+    **extra_params
 )

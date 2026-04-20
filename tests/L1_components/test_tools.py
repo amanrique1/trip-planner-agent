@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from agents.tools import get_coordinates, get_weather, save_trip_params
+from agents.utils.tools import _get_coordinates_tool as get_coordinates, _get_weather_tool as get_weather, _save_trip_params_tool as save_trip_params
 
 
 # Helper
@@ -17,7 +17,7 @@ def _mock_tool_context():
 #####################################
 class TestGetCoordinates:
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_success_returns_lat_long_name(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {
@@ -31,7 +31,7 @@ class TestGetCoordinates:
 
         assert result == {"lat": 37.7749, "long": -122.4194, "name": "San Francisco"}
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_calls_geocoding_api_with_city(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {
@@ -48,7 +48,7 @@ class TestGetCoordinates:
         assert kwargs["params"]["count"] == 1
         assert kwargs["timeout"] == 10
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_strips_text_after_comma(self, mock_get):
         """'Paris, France' → query should be 'Paris'."""
         mock_resp = MagicMock()
@@ -62,7 +62,7 @@ class TestGetCoordinates:
         _, kwargs = mock_get.call_args
         assert kwargs["params"]["name"] == "Paris"
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_strips_whitespace(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {
@@ -75,7 +75,7 @@ class TestGetCoordinates:
         _, kwargs = mock_get.call_args
         assert kwargs["params"]["name"] == "Rome"
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_empty_results_returns_error(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {"results": []}
@@ -84,10 +84,10 @@ class TestGetCoordinates:
         result = get_coordinates("Atlantis")
 
         assert "error" in result
-        assert "Could not find coordinates" in result["error"]
+        assert "No results for" in result["error"]
         assert "Atlantis" in result["error"]
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_missing_results_key_returns_error(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {}
@@ -97,7 +97,7 @@ class TestGetCoordinates:
 
         assert "error" in result
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_http_error_propagates(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.raise_for_status.side_effect = Exception("503 Service Unavailable")
@@ -106,14 +106,14 @@ class TestGetCoordinates:
         with pytest.raises(Exception, match="503"):
             get_coordinates("Berlin")
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_network_timeout_propagates(self, mock_get):
         mock_get.side_effect = Exception("Connection timed out")
 
         with pytest.raises(Exception, match="timed out"):
             get_coordinates("London")
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_raise_for_status_is_called(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {"results": []}
@@ -144,7 +144,7 @@ SAMPLE_WEATHER_API_RESPONSE = {
 
 class TestGetWeather:
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_success_returns_full_api_response(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = SAMPLE_WEATHER_API_RESPONSE
@@ -155,7 +155,7 @@ class TestGetWeather:
 
         assert result == SAMPLE_WEATHER_API_RESPONSE
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_writes_weather_raw_to_state(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = SAMPLE_WEATHER_API_RESPONSE
@@ -171,7 +171,7 @@ class TestGetWeather:
         assert raw["weather_codes"] == SAMPLE_WEATHER_API_RESPONSE["daily"]["weathercode"]
         assert raw["dates"] == SAMPLE_WEATHER_API_RESPONSE["daily"]["time"]
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_passes_correct_query_params(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = SAMPLE_WEATHER_API_RESPONSE
@@ -190,7 +190,7 @@ class TestGetWeather:
         assert "temperature_2m_min" in p["daily"]
         assert "weathercode" in p["daily"]
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_calls_forecast_api(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = SAMPLE_WEATHER_API_RESPONSE
@@ -203,7 +203,7 @@ class TestGetWeather:
         assert "api.open-meteo.com/v1/forecast" in args[0]
         assert kwargs["timeout"] == 10
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_raise_for_status_is_called(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = SAMPLE_WEATHER_API_RESPONSE
@@ -214,7 +214,7 @@ class TestGetWeather:
 
         mock_resp.raise_for_status.assert_called_once()
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_http_error_propagates(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.raise_for_status.side_effect = Exception("HTTP 500")
@@ -224,7 +224,7 @@ class TestGetWeather:
         with pytest.raises(Exception, match="HTTP 500"):
             get_weather(48.85, 2.35, ctx)
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_network_timeout_propagates(self, mock_get):
         mock_get.side_effect = Exception("Read timed out")
 
@@ -232,7 +232,7 @@ class TestGetWeather:
         with pytest.raises(Exception, match="timed out"):
             get_weather(48.85, 2.35, ctx)
 
-    @patch("agents.tools.requests.get")
+    @patch("agents.utils.tools.requests.get")
     def test_state_not_written_on_error(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.raise_for_status.side_effect = Exception("fail")
@@ -279,12 +279,8 @@ class TestSaveTripParams:
             tool_context=ctx,
         )
 
-        assert result["status"] == "saved"
-        assert result["origin"] == "NYC"
-        assert result["destination"] == "Tokyo"
-        assert result["start_date"] == "2025-07-01"
-        assert result["end_date"] == "2025-07-10"
-        assert result["dates"] == "2025-07-01 to 2025-07-10"
+        assert result["status"] == "success"
+        assert "Saved trip" in result["message"]
 
     def test_dates_format(self):
         ctx = _mock_tool_context()
@@ -310,5 +306,5 @@ class TestSaveTripParams:
             tool_context=ctx,
         )
 
-        expected_keys = {"origin", "destination", "start_date", "end_date", "dates"}
+        expected_keys = {"origin", "destination", "start_date", "end_date", "dates", "trip_params_summary"}
         assert set(ctx.state.keys()) == expected_keys

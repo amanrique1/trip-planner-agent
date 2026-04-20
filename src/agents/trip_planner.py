@@ -1,14 +1,17 @@
-from google.adk.agents import LlmAgent, ParallelAgent, SequentialAgent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai.types import Content, Part
+import logging
 
+from config import get_model
 from agents.intake_agent import intake_agent
 from agents.weather_agent import weather_agent
 from agents.flight_agent import flight_agent
 from agents.activities_agent import activities_agent
 from agents.hotel_agent import hotel_agent
-from config import get_model
+
+from google.adk.agents import LlmAgent, ParallelAgent, SequentialAgent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai.types import Content, Part
+
 
 class TripPlannerAgent:
     _instance = None
@@ -94,12 +97,22 @@ class TripPlannerAgent:
         return session.id
 
     async def run(self, user_id: str, session_id: str, message: str):
+        logger = logging.getLogger("trip_planner")
+
         user_content = Content(
             role="user",
             parts=[Part(text=message)],
         )
-        return self.runner.run_async(
+
+        async for event in self.runner.run_async(
             user_id=user_id,
             session_id=session_id,
             new_message=user_content,
-        )
+        ):
+            # Log every event so you can see which agents fire
+            author = getattr(event, "author", "unknown")
+            has_content = bool(getattr(event, "content", None))
+            logger.info(
+                f"Event from [{author}] | has_content={has_content}"
+            )
+            yield event
