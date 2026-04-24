@@ -8,7 +8,7 @@ instruction = get_instruction(_AGENT_NAME, is_gemini_model())
 extra_params = {}
 
 if is_gemini_model():
-    from agents.tools import save_trip_params_tool
+    from agents.utils.tools import save_trip_params_tool
     extra_params["tools"] = [save_trip_params_tool]
 else:
     from agents.utils.callbacks import store_trip_params

@@ -8,7 +8,7 @@ instruction = get_instruction(_AGENT_NAME, is_gemini_model())
 extra_params = {}
 
 if is_gemini_model():
-    from agents.tools import search_tool
+    from agents.utils.tools import search_tool
     extra_params["tools"] = [search_tool]
 else:
     from agents.utils.callbacks import prefetch_activities

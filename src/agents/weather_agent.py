@@ -8,7 +8,7 @@ instruction = get_instruction(_AGENT_NAME, is_gemini_model())
 extra_params = {}
 
 if is_gemini_model():
-    from agents.tools import coordinates_tool, weather_tool
+    from agents.utils.tools import coordinates_tool, weather_tool
     extra_params["tools"] = [coordinates_tool, weather_tool]
 else:
     from agents.utils.callbacks import prefetch_weather
